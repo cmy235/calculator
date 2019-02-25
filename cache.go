@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -38,7 +37,6 @@ func (c *cache) startTicking(ticker time.Ticker) {
 		case <-done:
 			return
 		case <-ticker.C:
-			fmt.Println("datastore >>> ", c.keyVals)
 			c.expireOldKeys()
 		}
 	}
