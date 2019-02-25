@@ -1,6 +1,6 @@
 
 # Teltech coding challenge
-##### Connor Yanz
+#### Connor Yanz
 
 ## Code
 ##### The server first serves static files at localhost:8080 which gives the user the option to input the operations via the gui. 4 routes are available routes for addition, subtraction, multiplication & division and each routes to the compute function passing the appropriate action.
@@ -8,10 +8,10 @@
 
 ##### The sync package was utilized to put mutual exclusion locks on the key/value store while clearing expired values.  This is good practice to prevent any situation where deletions or writes were happening simultaneously.  The mutex ensures that for the brief period where the cache is locked, the only changes that are happening are the ones you are making.
 
-##### To run the web app execute the binary
+##### To run the web app execute the binary and navigate to localhost:8080
 ##### $ ./main
 
 ## Testing
-##### The app can be tested via curl or wget. To run all unit tests:
+##### The app can be tested via curl or wget. To run unit tests:
 ##### $ go test -v main_test.go main.go operations.go cache.go
 
