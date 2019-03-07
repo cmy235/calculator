@@ -2,21 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"sync"
+	"strings"
 	"time"
 )
 
-// cache is the in memory key/value store
-type cache struct {
-	mu      sync.Mutex
-	keyVals map[string]*val
-}
-
 // val is the value in the cache key/value mapping
 type val struct {
-	operation  *Output
+	operation  Output
 	expiration time.Time
 }
 
@@ -30,33 +25,38 @@ type Output struct {
 }
 
 var datastore cache
+var routes map[string]bool
+
+func init() {
+	routes = map[string]bool{
+		"add":      true,
+		"subtract": true,
+		"multiply": true,
+		"divide":   true,
+	}
+}
 
 func main() {
-	http.Handle("/", http.FileServer(http.Dir("./static")))
-	http.HandleFunc("/add/", add)
-	http.HandleFunc("/subtract/", subtract)
-	http.HandleFunc("/multiply/", multiply)
-	http.HandleFunc("/divide/", divide)
+	http.HandleFunc("/", handler)
+
+	// http.Handle("/", http.FileServer(http.Dir("./static")))
+	// http.Handle("/welcome", http.FileServer(http.Dir("./static")))
 
 	datastore.new()
 	go datastore.setTicker()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func add(response http.ResponseWriter, request *http.Request) {
-	compute("add", response, request)
-}
+func handler(response http.ResponseWriter, request *http.Request) {
+	fmt.Println("req.URL.Path ", request.URL.Path)
 
-func subtract(response http.ResponseWriter, request *http.Request) {
-	compute("subtract", response, request)
-}
+	path := strings.Split(request.URL.Path, "/")
+	action := strings.Join(path, "")
+	isComputation := routes[action]
 
-func multiply(response http.ResponseWriter, request *http.Request) {
-	compute("multiply", response, request)
-}
-
-func divide(response http.ResponseWriter, request *http.Request) {
-	compute("divide", response, request)
+	if len(path) > 1 && isComputation {
+		checkInputs(action, response, request)
+	}
 }
 
 func (v *val) resetExpiration() {
@@ -64,10 +64,10 @@ func (v *val) resetExpiration() {
 }
 
 func parseValues(req *http.Request) (string, string, string) {
-	err := req.ParseForm()
-	if err != nil {
-		log.Fatalln("Form fail: ", err)
-	}
+	// err := req.ParseForm()
+	// if err != nil {
+	// 	log.Fatalln("Form fail: ", err)
+	// }
 
 	raw := req.URL.RawQuery
 	x := req.FormValue("x")
@@ -75,14 +75,20 @@ func parseValues(req *http.Request) (string, string, string) {
 	return x, y, raw
 }
 
-func writeResponse(out *Output, response http.ResponseWriter) []byte {
+func writeResponse(out Output, response http.ResponseWriter, errType bool) {
+	errBytes := []byte("Error. Failed calculation, try again")
+
+	if errType {
+		response.Write(errBytes)
+		return
+	}
+
 	jsonResult, err := json.Marshal(out)
 	if err != nil {
-		panic(err)
+		response.Write(errBytes)
+		return
 	}
 
 	response.Header().Set("Content-Type", "application/json")
-	response.WriteHeader(http.StatusOK)
 	response.Write(jsonResult)
-	return jsonResult
 }

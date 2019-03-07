@@ -1,55 +1,64 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 )
 
-func compute(action string, response http.ResponseWriter, request *http.Request) {
+// func writeResponse(out Output, response http.ResponseWriter, errType bool) {
+
+func checkInputs(action string, response http.ResponseWriter, request *http.Request) {
 	var answer float64
 	strX, strY, raw := parseValues(request)
 	path := "/" + action + "/?" + raw
-
 	x, y, err := convertToFloat(strX, strY)
 
 	if err != nil {
-		var errResponse *Output
-		if strX == "" || strY == "" {
-			errResponse = &Output{"The operation failed.  Did you forget the operands?", x, y, 0, false}
-		} else {
-			errResponse = &Output{"The operation failed.  Please don't try to do math with letters!", x, y, 0, false}
-		}
-		_ = writeResponse(errResponse, response)
+		writeResponse(Output{}, response, true)
 		return
 	}
 
 	inCache, value := datastore.get(path)
 	if inCache {
 		value.operation.Cached = true
-		_ = writeResponse(value.operation, response)
+		writeResponse(value.operation, response, false)
 		value.resetExpiration()
 		return
 	}
 
-	answer = calculate(action, x, y)
-	out := &Output{action, x, y, answer, false}
-	datastore.set(out, path, time.Now())
-	_ = writeResponse(out, response)
+	answer, err = calculate(action, x, y)
+	if err != nil {
+		writeResponse(Output{}, response, true)
+		return
+	}
+
+	out := Output{action, x, y, answer, false}
+	datastore.set(out, path)
+	writeResponse(out, response, false)
 }
 
-func calculate(action string, x, y float64) float64 {
+func calculate(action string, x, y float64) (float64, error) {
+	var err error
+
 	switch action {
 	case "add":
-		return x + y
+		return x + y, nil
 	case "subtract":
-		return x - y
+		return x - y, nil
 	case "multiply":
-		return x * y
+		return x * y, nil
 	case "divide":
-		return x / y
+		fmt.Println("x, y => ", x, y)
+		if y == 0.0 {
+			err = errors.New("Error calculating values")
+			return 0, err
+		}
+		return x / y, nil
 	default:
-		panic("Compuation not found")
+		err = errors.New("Error calculating values")
+		return 0.0, err
 	}
 }
 
