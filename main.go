@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -37,10 +36,8 @@ func init() {
 }
 
 func main() {
-	http.HandleFunc("/", handler)
-
-	// http.Handle("/", http.FileServer(http.Dir("./static")))
-	// http.Handle("/welcome", http.FileServer(http.Dir("./static")))
+	http.Handle("/", http.FileServer(http.Dir("./static")))
+	http.HandleFunc("/compute/", handler)
 
 	datastore.new()
 	go datastore.setTicker()
@@ -48,13 +45,11 @@ func main() {
 }
 
 func handler(response http.ResponseWriter, request *http.Request) {
-	fmt.Println("req.URL.Path ", request.URL.Path)
-
 	path := strings.Split(request.URL.Path, "/")
-	action := strings.Join(path, "")
+	action := path[2]
 	isComputation := routes[action]
 
-	if len(path) > 1 && isComputation {
+	if len(action) > 1 && isComputation {
 		checkInputs(action, response, request)
 	}
 }
@@ -64,10 +59,6 @@ func (v *val) resetExpiration() {
 }
 
 func parseValues(req *http.Request) (string, string, string) {
-	// err := req.ParseForm()
-	// if err != nil {
-	// 	log.Fatalln("Form fail: ", err)
-	// }
 
 	raw := req.URL.RawQuery
 	x := req.FormValue("x")

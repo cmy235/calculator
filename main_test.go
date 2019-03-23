@@ -1,7 +1,7 @@
 package main
 
-// TODO fix TestSet
-
+// TODO
+// Fix test cases since refactor
 import (
 	"bytes"
 	"net/http"

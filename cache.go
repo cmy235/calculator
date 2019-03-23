@@ -5,10 +5,8 @@ import (
 	"time"
 )
 
-// cache is the in memory key/value store
 type cache struct {
-	mu sync.RWMutex
-	// keyVals map[string]*val
+	mu      sync.RWMutex
 	keyVals map[string]val
 }
 
@@ -16,7 +14,6 @@ func (c *cache) new() {
 	c.keyVals = make(map[string]val)
 }
 
-// TODO read lock here?
 func (c *cache) get(url string) (bool, val) {
 	c.mu.RLock()
 	out, ok := c.keyVals[url]
@@ -52,19 +49,6 @@ func (c *cache) startTicking(ticker time.Ticker) {
 		}
 	}
 }
-
-// TODO
-// fix with mutex
-
-// func (c *cache) expireOldKeys() {
-// 	c.mu.Lock()
-// 	for url, value := range c.keyVals {
-// 		if value.expiration.Unix()+60 <= time.Now().Unix() {
-// 			delete(c.keyVals, url)
-// 		}
-// 	}
-// 	c.mu.Unlock()
-// }
 
 func (c *cache) expireOldKeys() {
 	for url, value := range c.keyVals {

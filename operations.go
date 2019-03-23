@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-// func writeResponse(out Output, response http.ResponseWriter, errType bool) {
-
 func checkInputs(action string, response http.ResponseWriter, request *http.Request) {
 	var answer float64
 	strX, strY, raw := parseValues(request)
