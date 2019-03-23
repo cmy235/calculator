@@ -1,5 +1,5 @@
 
-# Teltech coding challenge
+# Golang web app abacus
 #### Connor Yanz
 
 ## Code
@@ -12,9 +12,10 @@
 ##### ``` $ ./main ```
 
 ## Testing
+##### Test files are currently being refactored...
 ##### The app can be tested via curl or wget. To run unit tests individually
 ##### ``` $ go test -v main_test.go main.go operations.go cache.go ```
 ##### or run the test binary
-##### ``` $ ./Teltech_exercise_ConnorYanz.test ```
+##### ``` $ ./go_abacus.test ```
 
 
